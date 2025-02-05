@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import path from "path";
 import express from "express";
 import next from "next";
-import { pgConnect } from "./config/db.config";
+import { pg, pgClient, pgConnect } from "./config/db.config";
 import router from "./routes";
 
 // Load environment variables
@@ -28,6 +28,47 @@ server.use(express.json());
 // Express.js routing
 server.use("/public", express.static(path.join(__dirname, "public")));
 server.use("/api", router);
+
+// SSE route
+server.get("/events", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const sendEvent = (data: string) => {
+    res.write(`data: ${data}\n\n`);
+  };
+
+  const getTopWords = async () => {
+    const result = await pg.query(
+      "SELECT word, count FROM top_words ORDER BY count DESC"
+    );
+    return result.rows.map((row, i) => ({
+      word: row.word,
+      count: row.count,
+      rank: i + 1,
+    }));
+  };
+
+  const sendTopWords = async () => {
+    const words = await getTopWords();
+    sendEvent(JSON.stringify(words));
+  };
+
+  // Écouter les notifications PostgreSQL
+  pgClient.query("LISTEN top_words_update");
+  pgClient.on("notification", () => {
+    sendTopWords();
+  });
+
+  req.on("close", () => {
+    pgClient.query("UNLISTEN top_words_update");
+    res.end();
+  });
+
+  // Envoyer les mots initiaux
+  sendTopWords();
+});
 
 // Start the server
 app.prepare().then(() => {
