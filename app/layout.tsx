@@ -13,7 +13,7 @@ export default function RootLayout({
   >([]);
 
   useEffect(() => {
-    const eventSource = new EventSource("http://localhost:3000/events");
+    const eventSource = new EventSource(`${window.location.origin}/events`);
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
