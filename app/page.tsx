@@ -11,9 +11,24 @@ export default function Home() {
   }, []);
 
   return (
-    <div>
-      <h1>Trouve un mot à cliquer</h1>
-      <div className="flex flex-wrap gap-4">
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Trouve un mot à cliquer</h1>
+      <p className="mb-2">
+        Vous ne trouvez pas votre bonheur ? Créez votre mot à cliquer !
+      </p>
+      <input
+        type="text"
+        placeholder="Add word"
+        className="border border-gray-300 rounded py-2 px-4 w-full"
+        onKeyPress={(e) => {
+          if (e.key === "Enter") {
+            addWord(e.currentTarget.value);
+            e.currentTarget.value = "";
+          }
+        }}
+      />
+      <div className="mb-4"></div>
+      <div className="flex flex-wrap gap-4 mb-4">
         {wordsData.map((word) => (
           <a
             className="
@@ -33,16 +48,6 @@ export default function Home() {
           </a>
         ))}
       </div>
-      <input
-        type="text"
-        placeholder="Add word"
-        onKeyPress={(e) => {
-          if (e.key === "Enter") {
-            addWord(e.currentTarget.value);
-            e.currentTarget.value = "";
-          }
-        }}
-      />
     </div>
   );
 }

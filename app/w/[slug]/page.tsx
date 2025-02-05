@@ -40,17 +40,17 @@ const Page = ({ params: { slug } }: { params: { slug: string } }) => {
   return !wordData ? (
     <div>Loading...</div>
   ) : (
-    <div>
-      <h1>
+    <div className="flex flex-1 flex-col items-center justify-center">
+      <h1 className="text-2xl">
         {wordData.word} ({wordData.count + clickSinceBatch})
       </h1>
       <button
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full aspect-square"
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-full aspect-square text-4xl transition-transform transform active:scale-90"
         onClick={() => setClickSinceBatch(clickSinceBatch + 1)}
       >
         Increase
       </button>
-      <p>Total at batch : {totalAtBatch}</p>
+      <p className="mt-4">Total at batch : {totalAtBatch}</p>
       <p>Click since batch : {clickSinceBatch}</p>
     </div>
   );
