@@ -8,7 +8,10 @@ const postRequest = async <T>(
   const { data, status } = await axios.post<T>(url, params || {}, {
     withCredentials: true,
   });
-  if (status !== 200) {
+  if (
+    !/^2\d\d$/.test(status.toString()) &&
+    !/^3\d\d$/.test(status.toString())
+  ) {
     throw new Error("Request failed");
   }
   return data;

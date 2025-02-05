@@ -1,35 +1,26 @@
 import postgres from "pg";
 
-let pg: postgres.Client;
+const pg = new postgres.Pool({
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});
 
 function pgConnect() {
   const { POSTGRES_URL } = process.env;
 
   if (!POSTGRES_URL) {
-    throw new Error(
-      `Please provide all the required environment variables. Current env : \n ${JSON.stringify(
-        process.env,
-        null,
-        2
-      )}`
-    );
+    throw new Error("Please provide all the required environment variables");
   }
 
-  pg = new postgres.Client({
-    connectionString: POSTGRES_URL,
-  });
+  pg.options.connectionString = POSTGRES_URL;
 
   pg.connect((err) => {
     if (err) {
       console.error("Connection error", err.stack);
     } else {
-      console.log("Connected to the database");
+      console.log("> Connected to the database");
     }
-  });
-
-  pg.on("end", () => {
-    console.error("DATABASE CONNECTION ENDED. RETRYING IN 2 SECONDS...");
-    setTimeout(pgConnect, 2000);
   });
 }
 

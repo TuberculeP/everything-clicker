@@ -27,13 +27,14 @@ server.use(express.json());
 
 // Express.js routing
 server.use("/public", express.static(path.join(__dirname, "public")));
-server.use(router);
+server.use("/api", router);
 
 // Start the server
 app.prepare().then(() => {
   // Express.js routes and middleware go here
-  server.get("/api/custom-route", (req, res) => {
-    res.json({ message: "This is a custom API route." });
+  server.use("/api", (req, res, next) => {
+    console.log(`API call: ${req.method} ${req.url}`);
+    next();
   });
 
   // nextjs
