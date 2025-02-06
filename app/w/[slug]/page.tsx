@@ -52,8 +52,13 @@ const Page = ({ params: { slug } }: { params: { slug: string } }) => {
       >
         Increase
       </button>
-      <p className="mt-4">Total at batch : {totalAtBatch}</p>
-      <p>Click since batch : {clickSinceBatch}</p>
+      {typeof window !== "undefined" &&
+        window.location.hostname === "localhost" && (
+          <>
+            <p className="mt-4">Total at batch : {totalAtBatch}</p>
+            <p>Click since batch : {clickSinceBatch}</p>
+          </>
+        )}
     </div>
   );
 };
