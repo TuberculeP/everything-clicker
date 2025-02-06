@@ -1,6 +1,8 @@
 import { useState } from "react";
 import apiClient from "@/lib/apiClient";
 import { PgWord } from "@/types/words";
+import { AxiosError } from "axios";
+import toast from "react-hot-toast";
 
 const useWordsHook = () => {
   const [wordsData, setData] = useState<PgWord[]>([]);
@@ -30,11 +32,20 @@ const useWordsHook = () => {
   };
 
   const sendBatch = async () => {
-    await apiClient.postRequest("/api/words/increase", {
-      id: wordData?.id,
-      amount: clickSinceBatch,
-    });
-    fetchOne(wordData?.id || "");
+    try {
+      await apiClient.postRequest("/api/words/increase", {
+        id: wordData?.id,
+        amount: clickSinceBatch,
+      });
+
+      fetchOne(wordData?.id || "");
+    } catch (e) {
+      if (e instanceof AxiosError) {
+        if (e.response?.data.message === "no_auto_click") {
+          toast.error("Eh oh hein on autoclique ??? 🤨");
+        }
+      }
+    }
   };
 
   return {

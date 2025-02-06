@@ -3,6 +3,7 @@
 import Link from "next/link";
 import "./globals.css";
 import { useEffect, useState } from "react";
+import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
   children,
@@ -34,7 +35,10 @@ export default function RootLayout({
             <h1 className="text-2xl font-bold">Everything Clicker</h1>
           </Link>
         </header>
-        <main className="">{children}</main>
+        <main className="">
+          <Toaster position="bottom-left" />
+          {children}
+        </main>
         <aside className="w-fit bg-gray-100">
           <h2 className="text-xl font-semibold mb-2">Top 10 Words</h2>
           <ul className="space-y-2">

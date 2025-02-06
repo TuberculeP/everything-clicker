@@ -35,10 +35,15 @@ router.post("/words/add", async (req, res) => {
 router.post("/words/increase", async (req, res) => {
   try {
     const { id, amount } = req.body;
-    await pg.query("UPDATE words SET count = count + $1 WHERE id = $2", [
-      amount,
-      id,
-    ]);
+    if (amount > 250) {
+      // 125 cps * 2s batch
+      res.status(400).json({ message: "no_auto_click" });
+    } else {
+      await pg.query("UPDATE words SET count = count + $1 WHERE id = $2", [
+        amount,
+        id,
+      ]);
+    }
     res.status(201).json({ message: "Word increased" });
   } catch (error) {
     res.status(400).json({ error, message: "Error increasing word" });
