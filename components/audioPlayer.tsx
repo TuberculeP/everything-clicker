@@ -37,9 +37,6 @@ export default function AudioPlayer() {
 
     // Changer la source et jouer automatiquement
     audio.src = `/audio/${tracks[currentTrackIndex]}.opus`;
-    if (isPlaying) {
-      audio.play();
-    }
 
     const handleEnded = () => {
       nextTrack();
@@ -51,7 +48,17 @@ export default function AudioPlayer() {
       audio.pause(); // Stopper la lecture quand le composant est démonté
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [currentTrackIndex, isPlaying]); // Met à jour l'audio quand la piste change
+  }, [currentTrackIndex]); // Met à jour l'audio quand la piste change
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying]); // Met à jour l'état de lecture quand il change
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -64,20 +71,29 @@ export default function AudioPlayer() {
     if (!audio) return;
     if (isPlaying) {
       audio.pause();
+      setIsPlaying(false);
     } else {
       audio.play();
+      setIsPlaying(true);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const nextTrack = () => {
-    setCurrentTrackIndex((prev) => (prev + 1) % tracks.length);
-    setIsPlaying(true); // Joue automatiquement la prochaine piste
+    setIsPlaying(false);
+    setCurrentTrackIndex((prev) => {
+      const newIndex = (prev + 1) % tracks.length;
+      return newIndex;
+    });
+    setTimeout(() => setIsPlaying(true), 100); // Play the next track automatically with a slight delay
   };
 
   const prevTrack = () => {
-    setCurrentTrackIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
-    setIsPlaying(true); // Joue automatiquement la piste précédente
+    setIsPlaying(false);
+    setCurrentTrackIndex((prev) => {
+      const newIndex = (prev - 1 + tracks.length) % tracks.length;
+      return newIndex;
+    });
+    setTimeout(() => setIsPlaying(true), 100); // Play the previous track automatically with a slight delay
   };
 
   const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
