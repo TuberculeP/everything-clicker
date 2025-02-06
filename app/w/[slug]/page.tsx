@@ -25,20 +25,22 @@ const Page = ({ params: { slug } }: { params: { slug: string } }) => {
       sendBatch();
       doneTimeOut(false);
     }
-  }, [clickSinceBatch, timeOutDone]);
+  }, [wordData, timeOutDone]);
 
   useEffect(() => {
-    if (!timeOutDone && clickSinceBatch > 0 && !batching) {
+    if (!timeOutDone && !batching) {
       setBatching(true);
       setTimeout(() => {
         doneTimeOut(true);
         setBatching(false);
       }, 2000);
     }
-  }, [timeOutDone, clickSinceBatch, batching]);
+  }, [timeOutDone, batching]);
 
   return !wordData ? (
-    <div>Loading...</div>
+    <div>
+      <img src="" alt="chargementet" />
+    </div>
   ) : (
     <div className="flex flex-1 flex-col items-center justify-center">
       <h1 className="text-2xl">

@@ -41,11 +41,10 @@ server.get("/events", (req, res) => {
 
   const getTopWords = async () => {
     const result = await pg.query(
-      "SELECT word, count FROM top_words ORDER BY count DESC"
+      "SELECT id, word, count FROM top_words ORDER BY count DESC"
     );
     return result.rows.map((row, i) => ({
-      word: row.word,
-      count: row.count,
+      ...row,
       rank: i + 1,
     }));
   };
