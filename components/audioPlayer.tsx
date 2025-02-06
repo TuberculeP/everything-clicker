@@ -14,6 +14,7 @@ const tracks = [
 ];
 
 export default function AudioPlayer() {
+  const [proMode, setProMode] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(
     random(tracks.length - 1)
   );
@@ -72,6 +73,16 @@ export default function AudioPlayer() {
   const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setVolume(parseFloat(event.target.value));
   };
+
+  if (!proMode)
+    return (
+      <button
+        className="bg-gray-800 text-white font-bold py-2 px-4 rounded border-2 border-gray-600 hover:bg-gray-700"
+        onClick={() => setProMode(true)}
+      >
+        mode Pro
+      </button>
+    );
 
   return (
     <div>
