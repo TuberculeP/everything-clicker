@@ -1,3 +1,4 @@
+"use client";
 import { random } from "lodash";
 import { useState, useEffect, useRef } from "react";
 
@@ -20,12 +21,19 @@ export default function AudioPlayer() {
   );
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1); // Volume state
-  const audioRef = useRef(
-    new Audio(`/audio/${tracks[currentTrackIndex]}.opus`)
-  );
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      audioRef.current = new Audio(`/audio/${tracks[currentTrackIndex]}.opus`);
+      audioRef.current.volume = volume;
+    }
+  }, [currentTrackIndex, volume]);
 
   useEffect(() => {
     const audio = audioRef.current;
+
+    if (!audio) return;
 
     // Changer la source et jouer automatiquement
     audio.src = `/audio/${tracks[currentTrackIndex]}.opus`;
@@ -47,11 +55,13 @@ export default function AudioPlayer() {
 
   useEffect(() => {
     const audio = audioRef.current;
+    if (!audio) return;
     audio.volume = volume; // Met à jour le volume sans redémarrer la musique
   }, [volume]); // Met à jour le volume quand il change
 
   const playPause = () => {
     const audio = audioRef.current;
+    if (!audio) return;
     if (isPlaying) {
       audio.pause();
     } else {
