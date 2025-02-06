@@ -28,7 +28,7 @@ export default function AudioPlayer() {
       audioRef.current = new Audio(`/audio/${tracks[currentTrackIndex]}.opus`);
       audioRef.current.volume = volume;
     }
-  }, [currentTrackIndex, volume]);
+  }, [currentTrackIndex]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -51,7 +51,7 @@ export default function AudioPlayer() {
       audio.pause(); // Stopper la lecture quand le composant est démonté
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [currentTrackIndex]); // Met à jour l'audio quand la piste change
+  }, [currentTrackIndex, isPlaying]); // Met à jour l'audio quand la piste change
 
   useEffect(() => {
     const audio = audioRef.current;
