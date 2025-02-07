@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import "xp.css";
 import "./globals.css";
 import { useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import localFont from "next/font/local";
 import AudioPlayer from "@/components/audioPlayer";
 import _ from "lodash";
+import ThreeTest from "@/components/threeTest";
 
 const carmen = localFont({ src: "../fonts/Carmen.ttf" });
 const comic = localFont({ src: "../fonts/Comic Sans MS.ttf" });
@@ -39,11 +41,6 @@ export default function RootLayout({
     let eventSource = new EventSource(`${window.location.origin}/events`);
 
     const onMessage = (event: MessageEvent) => {
-      console.log(
-        "\x1b[44m%s\x1b[0m",
-        "app/layout.tsx:41 event.data",
-        event.data
-      );
       const data: any[] = JSON.parse(event.data);
       // get last 10 values (at the end of the array)
       setTopWords(_.uniqBy(data, "id"));
@@ -69,8 +66,13 @@ export default function RootLayout({
   const [sombre, setSombre] = useState(false);
 
   return (
-    <html lang="fr" className={comic.className}>
-      <body className="antialiased h-[100vh] grid grid-rows-[auto,1fr] bg-black">
+    <html lang="fr">
+      <body
+        className={
+          comic.className +
+          " antialiased h-[100vh] max-h-[100vh] w-[100vw] max-w-[100vw] grid grid-rows-[auto,1fr] bg-black"
+        }
+      >
         <header className="bg-black text-white p-4 col-span-full grid items-center grid-cols-[1fr_2fr_1fr]">
           <div>
             <AudioPlayer />
@@ -113,35 +115,23 @@ export default function RootLayout({
             <main className="grid grid-rows-[1fr_auto]">
               {children}
               <div>
-                <p>Top 10 boules bleues</p>
-                <p className="text-xs">
-                  Imaginez que c'est en 3d et que c'est stylé ou jsp
-                </p>
-                <div className="flex gap-4 items-center justify-center">
-                  {normalizedTopWords.map((w) => (
-                    <div
-                      key={w.id}
-                      style={{
-                        width: `100px`,
-                        aspectRatio: "1/1",
-                        backgroundColor: "blue",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                        transform: `scale(${w.value})`,
-                      }}
+                <footer className="bg-black text-white p-4">
+                  <p className="text-center">
+                    Fabriqué avec 🤮 par absolument pas{" "}
+                    <a
+                      className="underline"
+                      href="https://www.google.com/search?q=Daniel Pennac"
+                      target="_blank"
                     >
-                      {w.word}
-                    </div>
-                  ))}
-                </div>
+                      ce mec
+                    </a>
+                  </p>
+                </footer>
               </div>
             </main>
             <aside className="w-fit bg-gray-100">
-              <h2 className="text-xl font-semibold mb-2">Top 10 Words</h2>
-              <ul className="space-y-2">
+              <ThreeTest data={normalizedTopWords} />
+              <ul className="space-y-2  tree-view">
                 {topWords.map(({ word, count, rank }) => (
                   <li
                     key={word}
