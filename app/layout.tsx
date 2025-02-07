@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import localFont from "next/font/local";
 import AudioPlayer from "@/components/audioPlayer";
+import _ from "lodash";
 
 const carmen = localFont({ src: "../fonts/Carmen.ttf" });
 const comic = localFont({ src: "../fonts/Comic Sans MS.ttf" });
@@ -19,12 +20,33 @@ export default function RootLayout({
     { id: string; word: string; count: string; rank: number }[]
   >([]);
 
+  const [normalizedTopWords, setNormalizedTopWords] = useState<
+    { id: string; word: string; value: number }[]
+  >([]);
+
+  useEffect(() => {
+    const rawValues = topWords.map((word) => parseInt(word.count, 10));
+    const max = Math.max(...rawValues);
+    const min = Math.min(...rawValues);
+    const normalized = topWords.map((word) => ({
+      ...word,
+      value: (parseInt(word.count, 10) - min) / (max - min),
+    }));
+    setNormalizedTopWords(normalized);
+  }, [topWords]);
+
   useEffect(() => {
     let eventSource = new EventSource(`${window.location.origin}/events`);
 
     const onMessage = (event: MessageEvent) => {
-      const data = JSON.parse(event.data);
-      setTopWords(data);
+      console.log(
+        "\x1b[44m%s\x1b[0m",
+        "app/layout.tsx:41 event.data",
+        event.data
+      );
+      const data: any[] = JSON.parse(event.data);
+      // get last 10 values (at the end of the array)
+      setTopWords(_.uniqBy(data, "id"));
     };
 
     const onError = () => {
@@ -87,9 +109,35 @@ export default function RootLayout({
         </header>
         {!sombre ? (
           <div className={"grid grid-cols-[1fr_auto] bg-white"}>
-            <main className="">
-              <Toaster position="bottom-left" />
+            <Toaster position="bottom-left" />
+            <main className="grid grid-rows-[1fr_auto]">
               {children}
+              <div>
+                <p>Top 10 boules bleues</p>
+                <p className="text-xs">
+                  Imaginez que c'est en 3d et que c'est stylé ou jsp
+                </p>
+                <div className="flex gap-4 items-center justify-center">
+                  {normalizedTopWords.map((w) => (
+                    <div
+                      key={w.id}
+                      style={{
+                        width: `100px`,
+                        aspectRatio: "1/1",
+                        backgroundColor: "blue",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "white",
+                        transform: `scale(${w.value})`,
+                      }}
+                    >
+                      {w.word}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </main>
             <aside className="w-fit bg-gray-100">
               <h2 className="text-xl font-semibold mb-2">Top 10 Words</h2>

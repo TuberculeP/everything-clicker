@@ -35,6 +35,12 @@ async function pgConnect() {
       console.log("> Connected to the database via client");
     }
   });
+
+  pgClient.on("error", (err) => {
+    console.error("pgClient error", err.stack);
+    console.info("Attempting to reconnect pgClient");
+    pgConnect();
+  });
 }
 
 export { pgPool as pg, pgClient, pgConnect };
