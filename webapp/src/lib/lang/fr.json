@@ -1,0 +1,41 @@
+{
+  "app": {
+    "title": "Everything Clicker"
+  },
+  "layout": {
+    "darkMode": "Mode sombre",
+    "lightMode": "Mode clair",
+    "footer": "Fabriqué avec dégoût par absolument pas",
+    "footerLink": "ce mec"
+  },
+  "home": {
+    "title": "Trouve un mot à cliquer",
+    "subtitle": "Vous ne trouvez pas votre bonheur ? Créez votre mot à cliquer !",
+    "placeholder": "Ajouter un mot",
+    "addError": "Impossible d'ajouter ce mot"
+  },
+  "word": {
+    "loading": "chargement",
+    "increase": "Increase",
+    "notFound": "Ce mot n'existe pas",
+    "totalAtBatch": "Total au batch : {count}",
+    "clicksSinceBatch": "Clics depuis le batch : {count}",
+    "autoClick": "Eh oh hein on autoclique ???"
+  },
+  "player": {
+    "proMode": "mode Pro",
+    "nowPlaying": "Super Musique : {track}",
+    "volume": "Volume",
+    "previous": "Piste précédente",
+    "play": "Lecture",
+    "pause": "Pause",
+    "next": "Piste suivante"
+  },
+  "top": {
+    "window": "Classement.exe"
+  },
+  "notFound": {
+    "title": "404",
+    "back": "Retour à l'accueil"
+  }
+}

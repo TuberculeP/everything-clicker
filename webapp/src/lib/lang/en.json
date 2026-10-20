@@ -1,0 +1,41 @@
+{
+  "app": {
+    "title": "Everything Clicker"
+  },
+  "layout": {
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "footer": "Made with disgust by absolutely not",
+    "footerLink": "this guy"
+  },
+  "home": {
+    "title": "Find a word to click",
+    "subtitle": "Can't find what you want? Create your own word to click!",
+    "placeholder": "Add word",
+    "addError": "Could not add this word"
+  },
+  "word": {
+    "loading": "loading",
+    "increase": "Increase",
+    "notFound": "This word does not exist",
+    "totalAtBatch": "Total at batch: {count}",
+    "clicksSinceBatch": "Clicks since batch: {count}",
+    "autoClick": "Hey, are we auto-clicking???"
+  },
+  "player": {
+    "proMode": "Pro mode",
+    "nowPlaying": "Super Music: {track}",
+    "volume": "Volume",
+    "previous": "Previous track",
+    "play": "Play",
+    "pause": "Pause",
+    "next": "Next track"
+  },
+  "top": {
+    "window": "Classement.exe"
+  },
+  "notFound": {
+    "title": "404",
+    "back": "Back to home"
+  }
+}

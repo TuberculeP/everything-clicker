@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:23-slim AS builder
 
 WORKDIR /app
 
@@ -6,11 +6,14 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+# Ensures a .env exists so the app can start even if none was provided
+# at build time (docker-compose still injects real values via `environment:`).
+RUN touch .env
 
 RUN npm run build
 
 # Étape finale, beaucoup plus légère
-FROM node:20-alpine
+FROM node:23-slim
 
 WORKDIR /app
 

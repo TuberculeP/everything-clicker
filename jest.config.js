@@ -1,9 +1,7 @@
-/** @type {import('ts-jest').JestConfigWithTsJest} **/
 module.exports = {
   testEnvironment: "node",
+  roots: ["<rootDir>/server"],
   transform: {
-    "^.+.tsx?$": ["ts-jest",{}],
+    "^.+\\.ts$": ["ts-jest", { tsconfig: "server/tsconfig.json" }],
   },
-  collectCoverage: true,
-  coverageReporters: ['text', 'cobertura'],
 };

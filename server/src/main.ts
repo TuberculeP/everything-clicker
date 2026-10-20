@@ -1,88 +1,68 @@
-import dotenv from "dotenv";
+import "reflect-metadata";
+import "dotenv/config";
+import pg from "./config/db.config";
 import path from "path";
 import express from "express";
-import next from "next";
-import { pg, pgClient, pgConnect } from "./config/db.config";
+import helmet from "helmet";
+import { createServer as createViteServer } from "vite";
+import { createServer as createHttpServer } from "http";
+import { Server as WSServer } from "socket.io";
+import { registerWebsocketListeners } from "./events/event_handler";
 import router from "./routes";
+import { errorHandler } from "./middleware/error.middleware";
+import { setIo } from "./services/topWords.service";
 
-// Load environment variables
-const dev = process.env.NODE_ENV !== "production";
-dotenv.config({
-  path: [
-    path.resolve(__dirname, `${dev ? "../" : ""}../.env.local`),
-    path.resolve(__dirname, `${dev ? "../" : ""}../.env`),
-  ],
-});
+const main = async () => {
+  const dev = process.env.NODE_ENV !== "production";
 
-// Init all configs
-pgConnect();
+  const app = express();
+  const server = createHttpServer(app);
 
-// Next.js initialization
-const app = next({ dev });
-const handle = app.getRequestHandler();
+  // Behind Traefik/Coolify: trust the first proxy so express-rate-limit sees
+  // the client IP instead of the proxy's for everyone.
+  app.set("trust proxy", 1);
 
-// Express.js initialization
-const server = express();
-server.use(express.json());
+  app.use(helmet()).use(express.json());
 
-// Express.js routing
-server.use("/public", express.static(path.join(__dirname, "public")));
-server.use("/api", router);
+  app.use("/api", router);
+  app.use("/api", errorHandler);
 
-// SSE route
-server.get("/events", (req, res) => {
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
+  const vite = await createViteServer();
 
-  const sendEvent = (data: string) => {
-    res.write(`data: ${data}\n\n`);
-  };
+  app.use("/public", express.static("public"));
 
-  const getTopWords = async () => {
-    const result = await pg.query(
-      "SELECT id, word, count FROM top_words ORDER BY count DESC"
-    );
-    return result.rows.map((row, i) => ({
-      ...row,
-      rank: i + 1,
-    }));
-  };
+  if (dev) {
+    app.use(vite.middlewares);
+  } else {
+    app.use(express.static(path.resolve(__dirname, "./client")));
+  }
 
-  const sendTopWords = async () => {
-    const words = await getTopWords();
-    sendEvent(JSON.stringify(words));
-  };
-
-  // Écouter les notifications PostgreSQL
-  pgClient.query("LISTEN top_words_update");
-  pgClient.on("notification", () => {
-    sendTopWords();
+  app.use(async (req, res, next) => {
+    if (dev) {
+      vite.middlewares(req, res, next);
+    } else {
+      res.sendFile(path.resolve(__dirname, "./client/index.html"));
+    }
   });
 
-  req.on("close", () => {
-    pgClient.query("UNLISTEN top_words_update");
-    res.end();
-  });
-
-  // Envoyer les mots initiaux
-  sendTopWords();
-});
-
-// Start the server
-app.prepare().then(() => {
-  // Express.js routes and middleware go here
-  server.use("/api", (req, res, next) => {
-    console.log(`API call: ${req.method} ${req.url}`);
-    next();
-  });
-
-  // nextjs
-  server.all("*", (req, res) => {
-    return handle(req, res);
-  });
+  // WebSocket server
+  const wss = new WSServer(server);
+  registerWebsocketListeners(wss);
+  setIo(wss);
 
   server.listen(3000, () => {
     console.log("> Ready on http://localhost:3000");
   });
-});
+};
+
+// start typeorm migration and server
+(async () => {
+  await pg.initialize();
+  // Migrations only run against Postgres in production: dev and the
+  // SQLite fallback rely on `synchronize: true` instead, and running
+  // both against the same schema conflicts.
+  if (process.env.NODE_ENV === "production" && process.env.POSTGRES_URL) {
+    await pg.runMigrations();
+  }
+  await main();
+})();

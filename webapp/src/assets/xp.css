@@ -1,0 +1,9 @@
+/*
+ * Kept out of index.css on purpose: Tailwind inlines the @imports of index.css
+ * without rebasing relative url()s, which breaks xp.css fonts. Here Vite
+ * resolves the import and its fonts itself.
+ * Layered because unlayered CSS beats every layer in Tailwind v4: without
+ * layer(base), xp.css element styles (button, input...) would override
+ * Tailwind utilities.
+ */
+@import "xp.css/dist/XP.css" layer(base);
