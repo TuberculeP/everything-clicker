@@ -1,11 +1,9 @@
 import { z } from "zod";
 
 export const createWordSchema = z.object({
-  word: z
-    .string()
-    .trim()
-    .min(1, "Word is required")
-    .max(64, "Word must be at most 64 characters"),
+  // Raw input cap only: sanitizeWord() does the real checks and returns
+  // error codes the front can translate
+  word: z.string().max(512, "Word is too long"),
 });
 
 export const increaseSchema = z.object({

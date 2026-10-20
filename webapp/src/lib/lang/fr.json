@@ -12,7 +12,12 @@
     "title": "Trouve un mot à cliquer",
     "subtitle": "Vous ne trouvez pas votre bonheur ? Créez votre mot à cliquer !",
     "placeholder": "Ajouter un mot",
-    "addError": "Impossible d'ajouter ce mot"
+    "addError": "Impossible d'ajouter ce mot",
+    "errors": {
+      "word_empty": "Ce mot est vide ou invisible",
+      "word_too_long": "67 caractères maximum",
+      "word_exists": "Ce mot existe déjà"
+    }
   },
   "word": {
     "loading": "chargement",

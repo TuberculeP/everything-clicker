@@ -8,7 +8,12 @@
         class="grid grid-cols-[auto_1fr_auto] gap-2"
       >
         <span>{{ rank }}</span>
-        <RouterLink :to="{ name: 'word', params: { id } }" class="max-w-48">
+        <RouterLink
+          :to="{ name: 'word', params: { id } }"
+          :title="word"
+          dir="auto"
+          class="max-w-48 min-w-0 truncate"
+        >
           {{ word }}
         </RouterLink>
         <span>({{ count }})</span>

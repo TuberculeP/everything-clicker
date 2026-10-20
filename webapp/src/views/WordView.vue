@@ -6,7 +6,9 @@
     <p>{{ t("word.loading") }}</p>
   </div>
   <div v-else class="flex flex-1 flex-col items-center justify-center gap-4">
-    <h1 class="text-2xl">{{ word.word }} ({{ word.count + pending }})</h1>
+    <h1 class="text-2xl text-center break-all max-w-full px-4">
+      <span dir="auto">{{ word.word }}</span> ({{ word.count + pending }})
+    </h1>
     <button
       class="bg-clicker hover:bg-clicker-hover text-clicker-foreground font-bold py-4 px-8 rounded-full aspect-square text-4xl transition-transform active:scale-90"
       @click="click"

@@ -22,7 +22,7 @@ const main = async () => {
   // the client IP instead of the proxy's for everyone.
   app.set("trust proxy", 1);
 
-  app.use(helmet()).use(express.json());
+  app.use(helmet()).use(express.json({ limit: "10kb" }));
 
   app.use("/api", router);
   app.use("/api", errorHandler);

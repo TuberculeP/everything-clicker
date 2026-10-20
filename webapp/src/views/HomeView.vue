@@ -5,7 +5,7 @@
     <Input
       v-model="newWord"
       :placeholder="t('home.placeholder')"
-      maxlength="64"
+      maxlength="67"
       class="mb-4"
       @keydown.enter="submit"
     />
@@ -14,9 +14,9 @@
         v-for="word in words"
         :key="word.id"
         as-child
-        class="bg-clicker hover:bg-clicker-hover text-clicker-foreground font-bold"
+        class="bg-clicker hover:bg-clicker-hover text-clicker-foreground font-bold h-auto min-h-10 max-w-full whitespace-normal break-all"
       >
-        <RouterLink :to="{ name: 'word', params: { id: word.id } }">
+        <RouterLink :to="{ name: 'word', params: { id: word.id } }" dir="auto">
           {{ word.word }}
         </RouterLink>
       </Button>
@@ -39,12 +39,19 @@ const { words } = storeToRefs(wordsStore);
 
 const newWord = ref("");
 
+// Server error codes from POST /api/words that have their own message
+const WORD_ERRORS = ["word_empty", "word_too_long", "word_exists"];
+
 async function submit() {
   const word = newWord.value.trim();
   if (!word) return;
   const error = await wordsStore.addWord(word);
   if (error) {
-    toast.error(t("home.addError"), { description: error });
+    toast.error(t("home.addError"), {
+      description: WORD_ERRORS.includes(error)
+        ? t(`home.errors.${error}`)
+        : error,
+    });
     return;
   }
   newWord.value = "";

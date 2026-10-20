@@ -12,7 +12,7 @@ src/
   config/
     db.config.ts                # DataSource: Postgres if POSTGRES_URL, else SQLite
     entities/index.ts           # entity registry (Word)
-    entities/Word.ts            # id uuid, word varchar(64), count int (indexed), timestamps
+    entities/Word.ts            # id uuid, word varchar(67), key (unique, select: false), count int (indexed), timestamps
   routes/
     index.ts                    # mounts /words
     words/                      # list, top, get, create, increase (+ Zod schemas)
@@ -21,10 +21,13 @@ src/
   utils/
     AppError.ts                 # new AppError(message, statusCode = 400)
     asyncHandler.ts             # forwards async errors to errorHandler
+    word.ts                     # sanitizeWord() (invisibles, Zalgo, length), wordKey() (duplicate key)
   events/
     event_handler.ts            # WebSocket event registry
     words.event.ts              # "words" { action: "top" } -> emits "words:top" to the caller
   migrations/                   # Postgres migrations (prod only)
+scripts/
+  migration-generate.mjs        # migration:generate on a temporary database (POSTGRES_URL, else docker local defaults)
 __tests__/                      # Jest (ts-jest, server/tsconfig.json)
 ```
 
@@ -35,8 +38,14 @@ __tests__/                      # Jest (ts-jest, server/tsconfig.json)
 | GET | `/api/words` | all words, oldest first |
 | GET | `/api/words/top` | `TopWord[]` (`{ id, word, count, rank }`, 10 max) |
 | GET | `/api/words/:id` | 404 if unknown or malformed uuid |
-| POST | `/api/words` | `{ word }` (trimmed, 1..64), `createWordLimiter`, 201 + created word |
+| POST | `/api/words` | `{ word }` (string, 512 max raw), `createWordLimiter`, `sanitizeWord` -> 400 `word_empty` / `word_too_long` (> 67 code points), same `wordKey` as an existing word -> 409 `word_exists`; 201 + created word |
 | POST | `/api/words/:id/increase` | `{ amount }` int >= 1, `clickLimiter`; `amount > 250` -> 400 `no_auto_click`; returns the updated word |
+
+```typescript
+// utils/word.ts
+sanitizeWord(raw: string): string // throws AppError("word_empty" | "word_too_long", 400)
+wordKey(word: string): string     // folds case, accents, spaces, punctuation, styled letters, Cyrillic/Greek lookalikes
+```
 
 Socket.io: server emits `words:top` (`TopWord[]`) to everyone after each create/increase, and to a single client when it emits `words` with `{ action: "top" }`.
 
@@ -55,7 +64,7 @@ Socket.io: server emits `words:top` (`TopWord[]`) to everyone after each create/
 
 1. `config/entities/X.ts` (uuid primary key, like `Word.ts`).
 2. Add it to the array in `config/entities/index.ts` (not in `db.config.ts`).
-3. Dev schema auto-syncs. For prod, generate a migration against a reachable Postgres (e.g. `npm run dockerize`, port 5432 is published locally), from Git Bash: `TS_NODE_PROJECT=server/tsconfig.json POSTGRES_URL=... npx typeorm-ts-node-commonjs migration:generate -d server/src/config/db.config.ts server/src/migrations/<Name>`. Same for `migration:run` / `migration:revert`.
+3. Dev schema auto-syncs. For prod, with a Postgres running (`npm run dockerize` publishes 5432): `npm run migration:generate -- <Name>`, then review the file (a column change can come out as DROP + ADD, which loses data).
 
 ## Add a WebSocket event group
 
@@ -66,9 +75,12 @@ Socket.io: server emits `words:top` (`TopWord[]`) to everyone after each create/
 ## Gotchas
 
 - SQLite always uses `synchronize: true`: migrations are written for Postgres. Never run migrations against SQLite.
-- Prod has `synchronize: false`: forgetting a migration after an entity change means missing columns in prod only.
+- Prod has `synchronize: false`: forgetting a migration after an entity change means missing columns in prod only, and deleting every migration means no table at all ("relation word does not exist").
+- Never run plain `typeorm migration:generate` against the dev database: Postgres also synchronizes outside production, so the diff comes out empty. `migration-generate.mjs` avoids it by creating a temporary database, applying the existing migrations to it, diffing, then dropping it.
 - `app.set("trust proxy", 1)` is needed behind Traefik: without it the rate limiters key on the proxy IP and throttle everyone together. Don't remove it, and raise it if another proxy hop is added.
 - `broadcastTopWords()` is lodash-throttled (1/s, leading + trailing): don't `await` it, and don't call `io.emit("words:top")` directly from routes.
 - The 250 clicks per batch limit matches the front's 2s batch (`webapp/src/composables/useClickBatch.ts`). Change both together.
 - Malformed ids are rejected before querying (`UUID_REGEX` in `routes/words/index.ts`): Postgres throws on an invalid uuid, which would be a 500.
+- `Word.key` must always be `wordKey(sanitizeWord(x))`. Changing `wordKey` means recomputing every existing key in a migration, or duplicates slip through.- Non-ASCII characters in the `utils/word.ts` regexes are written as `\u` escapes on purpose: most of them are invisible in an editor. Tests build them with `String.fromCodePoint`.
+- `express.json` is capped at 10kb.
 - `errorHandler` logs the error but not `req.body`. Keep it that way.

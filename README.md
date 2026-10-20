@@ -42,7 +42,7 @@ Copier `.env.example` vers `.env`. Il fait référence pour toutes les variables
 | GET | `/api/words` | Tous les mots |
 | GET | `/api/words/top` | Top 10 (`{ id, word, count, rank }`) |
 | GET | `/api/words/:id` | Un mot |
-| POST | `/api/words` | Crée un mot `{ word }` (1 à 64 caractères, rate limité) |
+| POST | `/api/words` | Crée un mot `{ word }` (67 caractères max après nettoyage des caractères invisibles et du Zalgo, doublons refusés avec `409 word_exists`, rate limité) |
 | POST | `/api/words/:id/increase` | Ajoute `{ amount }` clics (250 max par batch, sinon `no_auto_click`) |
 
 WebSocket : le serveur émet `words:top` à chaque changement (au plus une fois par seconde). Un client peut demander l'état courant en émettant `words` avec `{ action: "top" }`.
@@ -60,12 +60,13 @@ Le nom d'utilisateur Postgres préenregistré dans `docker/pgadmin/servers.json`
 
 ## Migrations
 
-En dev, le schéma se synchronise automatiquement. En prod, il passe par `server/src/migrations/`, appliquées au boot. Après une modification d'entité, avec une Postgres accessible (par exemple `npm run dockerize`), lancer depuis Git Bash :
+En dev, le schéma se synchronise automatiquement. En prod, il passe par `server/src/migrations/`, appliquées au boot. Après une modification d'entité, avec une Postgres accessible (par exemple `npm run dockerize`) :
 
 ```bash
-TS_NODE_PROJECT=server/tsconfig.json POSTGRES_URL=postgres://user:password@localhost:5432/mydatabase \
-  npx typeorm-ts-node-commonjs migration:generate -d server/src/config/db.config.ts server/src/migrations/NomDeLaMigration
+npm run migration:generate -- NomDeLaMigration
 ```
+
+Le script crée une base temporaire, y applique les migrations existantes, génère la différence avec les entités dans `server/src/migrations/`, puis supprime la base. Il utilise `POSTGRES_URL`, sinon les identifiants par défaut de `docker-compose.local.yml`. Relire le fichier généré : un changement de colonne peut sortir en DROP + ADD, ce qui perd les données.
 
 ## RGPD
 

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { QueryFailedError } from "typeorm";
 import pg from "../../config/db.config";
 import { Word } from "../../config/entities/Word";
 import { validateBody } from "../../middleware/validate.middleware";
@@ -8,6 +9,7 @@ import {
 } from "../../middleware/rateLimiter.middleware";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { AppError } from "../../utils/AppError";
+import { sanitizeWord, wordKey } from "../../utils/word";
 import {
   broadcastTopWords,
   getTopWords,
@@ -21,6 +23,13 @@ const UUID_REGEX =
 
 const wordsRouter = Router();
 const repo = () => pg.getRepository(Word);
+
+// Postgres and SQLite codes for a unique index violation
+const UNIQUE_VIOLATION_CODES = ["23505", "SQLITE_CONSTRAINT"];
+
+const isUniqueViolation = (err: unknown) =>
+  err instanceof QueryFailedError &&
+  UNIQUE_VIOLATION_CODES.includes(err.driverError?.code);
 
 const findWordOrFail = async (id: string) => {
   // Postgres rejects a malformed uuid with a 500, answer 404 instead
@@ -59,9 +68,22 @@ wordsRouter.post(
   createWordLimiter,
   validateBody(createWordSchema),
   asyncHandler(async (req, res) => {
-    const word = await repo().save(repo().create({ word: req.body.word }));
+    const word = sanitizeWord(req.body.word);
+    const key = wordKey(word);
+    if (await repo().exists({ where: { key } })) {
+      throw new AppError("word_exists", 409);
+    }
+    let id: string;
+    try {
+      ({ id } = await repo().save(repo().create({ word, key })));
+    } catch (err) {
+      // Same word created by a concurrent request
+      if (isUniqueViolation(err)) throw new AppError("word_exists", 409);
+      throw err;
+    }
     broadcastTopWords();
-    res.status(201).json(word);
+    // Re-read so the response leaves out the key column
+    res.status(201).json(await findWordOrFail(id));
   }),
 );
 

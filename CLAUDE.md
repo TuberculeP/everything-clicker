@@ -32,7 +32,7 @@ npm run lint         # ESLint + Prettier (also lint:webapp / lint:server)
 npm run dockerize    # Postgres + pgAdmin + app via Docker Compose (local ports)
 ```
 
-Windows: `npm start` and `migration:*` use POSIX `VAR=x cmd` syntax and fail under cmd.exe (npm runs scripts through cmd even from Git Bash). Run the underlying command directly from Git Bash.
+Scripts setting env vars go through `cross-env`: npm runs them through cmd.exe on Windows, even from Git Bash, so plain `VAR=x cmd` fails there.
 
 ## Environment
 

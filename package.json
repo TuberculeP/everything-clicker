@@ -5,15 +5,15 @@
   "scripts": {
     "dev": "nodemon server/src/main.ts",
     "build": "tsc -p server && vite build",
-    "start": "NODE_ENV=production node dist/main.js",
+    "start": "cross-env NODE_ENV=production node dist/main.js",
     "test": "jest --passWithNoTests",
     "lint": "eslint .",
     "lint:webapp": "eslint webapp",
     "lint:server": "eslint server",
     "dockerize": "docker compose -f docker-compose.yml -f docker-compose.local.yml up --build --force-recreate -d",
-    "migration:generate": "TS_NODE_PROJECT=server/tsconfig.json typeorm-ts-node-commonjs migration:generate -d server/src/config/db.config.ts",
-    "migration:run": "TS_NODE_PROJECT=server/tsconfig.json typeorm-ts-node-commonjs migration:run -d server/src/config/db.config.ts",
-    "migration:revert": "TS_NODE_PROJECT=server/tsconfig.json typeorm-ts-node-commonjs migration:revert -d server/src/config/db.config.ts"
+    "migration:generate": "node server/scripts/migration-generate.mjs",
+    "migration:run": "cross-env TS_NODE_PROJECT=server/tsconfig.json typeorm-ts-node-commonjs migration:run -d server/src/config/db.config.ts",
+    "migration:revert": "cross-env TS_NODE_PROJECT=server/tsconfig.json typeorm-ts-node-commonjs migration:revert -d server/src/config/db.config.ts"
   },
   "dependencies": {
     "@lucide/vue": "^1.60.0",
@@ -62,6 +62,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/tsconfig": "^0.7.0",
     "autoprefixer": "^10.4.22",
+    "cross-env": "^10.1.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.3.1",
     "eslint-config-prettier": "^10.1.5",

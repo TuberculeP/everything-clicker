@@ -80,7 +80,8 @@ function buildSpheres(data: { id: string; word: string; value: number }[]) {
     // CSS2D labels always face the camera, like drei's <Billboard>
     const label = document.createElement("span");
     label.textContent = word;
-    label.className = "text-sm text-foreground";
+    label.dir = "auto";
+    label.className = "block max-w-32 truncate text-sm text-foreground";
     const labelObject = new CSS2DObject(label);
     labelObject.position.set(0, scale + 0.5, 0);
     group.add(labelObject);

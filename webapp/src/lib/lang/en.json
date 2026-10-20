@@ -12,7 +12,12 @@
     "title": "Find a word to click",
     "subtitle": "Can't find what you want? Create your own word to click!",
     "placeholder": "Add word",
-    "addError": "Could not add this word"
+    "addError": "Could not add this word",
+    "errors": {
+      "word_empty": "This word is empty or invisible",
+      "word_too_long": "67 characters maximum",
+      "word_exists": "This word already exists"
+    }
   },
   "word": {
     "loading": "loading",
