@@ -7,6 +7,7 @@ import {
   clickLimiter,
   createWordLimiter,
 } from "../../middleware/rateLimiter.middleware";
+import { clickBudget } from "../../middleware/clickBudget.middleware";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { AppError } from "../../utils/AppError";
 import { sanitizeWord, wordKey } from "../../utils/word";
@@ -16,8 +17,6 @@ import {
 } from "../../services/topWords.service";
 import { createWordSchema, increaseSchema } from "./words.schemas";
 
-// 125 clicks/s over the 2s batch window of the front
-const MAX_CLICKS_PER_BATCH = 250;
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -91,11 +90,9 @@ wordsRouter.post(
   "/:id/increase",
   clickLimiter,
   validateBody(increaseSchema),
+  clickBudget,
   asyncHandler(async (req, res) => {
     const { amount } = req.body;
-    if (amount > MAX_CLICKS_PER_BATCH) {
-      throw new AppError("no_auto_click", 400);
-    }
     const { id } = await findWordOrFail(req.params.id);
     await repo().increment({ id }, "count", amount);
     broadcastTopWords();

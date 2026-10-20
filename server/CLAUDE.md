@@ -39,7 +39,7 @@ __tests__/                      # Jest (ts-jest, server/tsconfig.json)
 | GET | `/api/words/top` | `TopWord[]` (`{ id, word, count, rank }`, 10 max) |
 | GET | `/api/words/:id` | 404 if unknown or malformed uuid |
 | POST | `/api/words` | `{ word }` (string, 512 max raw), `createWordLimiter`, `sanitizeWord` -> 400 `word_empty` / `word_too_long` (> 67 code points), same `wordKey` as an existing word -> 409 `word_exists`; 201 + created word |
-| POST | `/api/words/:id/increase` | `{ amount }` int >= 1, `clickLimiter`; `amount > 250` -> 400 `no_auto_click`; returns the updated word |
+| POST | `/api/words/:id/increase` | `{ amount }` int >= 1, `clickLimiter`, `clickBudget`; `amount > 250` -> 400 `no_auto_click`, per-IP click budget exceeded -> 429 `no_auto_click`; returns the updated word |
 
 ```typescript
 // utils/word.ts
@@ -79,7 +79,7 @@ Socket.io: server emits `words:top` (`TopWord[]`) to everyone after each create/
 - Never run plain `typeorm migration:generate` against the dev database: Postgres also synchronizes outside production, so the diff comes out empty. `migration-generate.mjs` avoids it by creating a temporary database, applying the existing migrations to it, diffing, then dropping it.
 - `app.set("trust proxy", 1)` is needed behind Traefik: without it the rate limiters key on the proxy IP and throttle everyone together. Don't remove it, and raise it if another proxy hop is added.
 - `broadcastTopWords()` is lodash-throttled (1/s, leading + trailing): don't `await` it, and don't call `io.emit("words:top")` directly from routes.
-- The 250 clicks per batch limit matches the front's 2s batch (`webapp/src/composables/useClickBatch.ts`). Change both together.
+- The 250 clicks per batch limit and the 125 clicks/s per-IP budget (`middleware/clickBudget.middleware.ts`, in-memory token bucket) match the front's 2s batch (`webapp/src/composables/useClickBatch.ts`). Change both together. The budget is per IP, so users behind one NAT share it.
 - Malformed ids are rejected before querying (`UUID_REGEX` in `routes/words/index.ts`): Postgres throws on an invalid uuid, which would be a 500.
 - `Word.key` must always be `wordKey(sanitizeWord(x))`. Changing `wordKey` means recomputing every existing key in a migration, or duplicates slip through.- Non-ASCII characters in the `utils/word.ts` regexes are written as `\u` escapes on purpose: most of them are invisible in an editor. Tests build them with `String.fromCodePoint`.
 - `express.json` is capped at 10kb.
